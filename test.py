@@ -72,9 +72,9 @@ def imm_cvat():
     models = [kf_cv(), kf_ca(), kf_ct()]
     r = np.array([
         [100.],
-        [10.],
+        [5.5],
         [100.],
-        [10.]
+        [5.5]
     ])
     for model in models:
         model.R *= r
@@ -147,8 +147,8 @@ def z_data():
     z_std = data.cv_z(0., 10., 0., 10., dt, cnt)
     z_std += data.ct_z(z_std[-1][0,0], z_std[-1][1,0],
                        z_std[-1][2,0], z_std[-1][3,0], math.pi/180*25, dt, cnt)
-    z_std += data.ca_z(z_std[-1][0,0], z_std[-1][1,0], 3.,
-                       z_std[-1][2,0], z_std[-1][3,0], 5., dt, cnt)
+    z_std += data.ca_z(z_std[-1][0,0], z_std[-1][1,0], 6.,
+                       z_std[-1][2,0], z_std[-1][3,0], 8., dt, cnt)
 
     return z_std
 
@@ -185,8 +185,7 @@ def test_cvt():
         x = np.zeros(imm.models[0].X.shape)
         for i in range(len(imm.models)):
             x += np.dot(imm.model_trans[0][i], imm.models[i].X) * prob[-1][i]
-        
-        
+        z_filt.append(x)
 
     plot_position(
         [z[0,0] for z in z_std],
