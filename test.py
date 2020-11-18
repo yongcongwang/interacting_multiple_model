@@ -63,18 +63,18 @@ def kf_ct():
 
 def imm_cvat():
     P_trans = np.array([
-        [0.96, 0.02, 0.02],
-        [0.02, 0.96, 0.02],
-        [0.02, 0.02, 0.96]
+        [0.98, 0.01, 0.01],
+        [0.01, 0.98, 0.01],
+        [0.01, 0.01, 0.98]
     ])
     U_prob = np.array([0.33, 0.33, 0.33]).reshape((-1, 1))
 
     models = [kf_cv(), kf_ca(), kf_ct()]
     r = np.array([
-        [100.],
-        [5.5],
-        [100.],
-        [5.5]
+        [5.],
+        [2.],
+        [5.],
+        [2.5]
     ])
     for model in models:
         model.R *= r
@@ -277,4 +277,68 @@ def test_cvat():
     )
     plot_show()
 
-test_cvat()
+#test_cvat()
+
+def test_imm_veh():
+    z_noise = data.ped_z()
+    print(z_noise)
+
+    imm = imm_cvat();
+    z0 = z_noise[0]
+    imm.models[0].X = np.array([
+        [z0[0, 0]],
+        [z0[1, 0]],
+        [z0[2, 0]],
+        [z0[3, 0]]
+    ])
+    imm.models[1].X = np.array([
+        [z0[0, 0]],
+        [z0[1, 0]],
+        [0.],
+        [z0[2, 0]],
+        [z0[3, 0]],
+        [0.]
+    ])
+    imm.models[2].X = np.array([
+        [z0[0, 0]],
+        [z0[1, 0]],
+        [z0[2, 0]],
+        [z0[3, 0]],
+        [0.]
+    ])
+
+    prob = []
+    z_filt = []
+    for z in z_noise:
+        prob.append(np.copy(imm.filt(z)))
+        # merge
+        x = np.zeros(imm.models[0].X.shape)
+        for i in range(len(imm.models)):
+            x += np.dot(imm.model_trans[0][i], imm.models[i].X) * prob[-1][i]
+        z_filt.append(x)
+        #return
+
+    plot_position(
+        [z[0,0] for z in z_noise],
+        [z[2,0] for z in z_noise],
+        [z[0,0] for z in z_noise],
+        [z[2,0] for z in z_noise],
+        [z[0,0] for z in z_filt],
+        [z[2,0] for z in z_filt]
+    )
+    plot_speed(
+        [z[1,0] for z in z_noise],
+        [z[3,0] for z in z_noise],
+        [z[1,0] for z in z_noise],
+        [z[3,0] for z in z_noise],
+        [z[1,0] for z in z_filt],
+        [z[3,0] for z in z_filt]
+    )
+    plot_prob(
+        [p[0,0] for p in prob],
+        [p[1,0] for p in prob],
+        [p[2,0] for p in prob],
+    )
+    plot_show()
+
+test_imm_veh()
