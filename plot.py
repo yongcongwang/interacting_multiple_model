@@ -5,6 +5,13 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+def plot_prediction(noise_x, noise_y, pred_x, pred_y):
+    plt.figure(2)
+    plt.plot(noise_x, noise_y, color='r', linewidth=4, label='pos_real')
+    for i in range(len(pred_x)):
+        plt.plot(pred_x[i], pred_y[i], color='g', alpha=0.6)
+    plt.legend()
+
 def plot_position(std_x, std_y, noise_x, noise_y, filt_x, filt_y):
     plt.figure(1)
 

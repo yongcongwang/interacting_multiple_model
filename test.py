@@ -44,7 +44,7 @@ def kf_ca():
     return KalmanFilter(A, H)
 
 def kf_ct():
-    dtheta = math.pi / 180 * 25
+    dtheta = math.pi / 180 * 15
     theta = dtheta * dt
     A = np.array([
          [1., math.sin(theta)/dtheta, 0., -(1 - math.cos(theta))/dtheta, 0.],
@@ -280,8 +280,7 @@ def test_cvat():
 #test_cvat()
 
 def test_imm_veh():
-    z_noise = data.ped_z()
-    print(z_noise)
+    z_noise = data.veh_z_mia()
 
     imm = imm_cvat();
     z0 = z_noise[0]
@@ -341,4 +340,94 @@ def test_imm_veh():
     )
     plot_show()
 
-test_imm_veh()
+def test_imm_veh_pred():
+    z_noise = data.veh_z_mia()
+
+    imm = imm_cvat();
+    z0 = z_noise[0]
+    imm.models[0].X = np.array([
+        [z0[0, 0]],
+        [z0[1, 0]],
+        [z0[2, 0]],
+        [z0[3, 0]]
+    ])
+    imm.models[1].X = np.array([
+        [z0[0, 0]],
+        [z0[1, 0]],
+        [0.],
+        [z0[2, 0]],
+        [z0[3, 0]],
+        [0.]
+    ])
+    imm.models[2].X = np.array([
+        [z0[0, 0]],
+        [z0[1, 0]],
+        [z0[2, 0]],
+        [z0[3, 0]],
+        [0.]
+    ])
+
+    prob = []
+    z_filt = []
+    pred_z = []
+    for z in z_noise:
+        prob.append(np.copy(imm.filt(z)))
+        # merge
+        x = np.zeros(imm.models[0].X.shape)
+        for i in range(len(imm.models)):
+            x += np.dot(imm.model_trans[0][i], imm.models[i].X) * prob[-1][i]
+        z_filt.append(x)
+
+        # predict trajectory
+        states = [imm.models[0].X.copy(),
+                  imm.models[1].X.copy(),
+                  imm.models[2].X.copy()]
+        pred_step = []
+        for i in range(50): # predict 5s
+            for i in range(len(states)): # each model predict
+                states[i] = np.dot(imm.models[i].A, states[i])
+            x_step = np.zeros(x.shape)
+            for i in range(len(imm.models)): # merge predict
+                x_step += np.dot(imm.model_trans[0][i], states[i]) * prob[-1][i]
+            pred_step.append(x_step.copy())
+        pred_z.append(pred_step)
+            
+
+    plot_position(
+        [z[0,0] for z in z_noise],
+        [z[2,0] for z in z_noise],
+        [z[0,0] for z in z_noise],
+        [z[2,0] for z in z_noise],
+        [z[0,0] for z in z_filt],
+        [z[2,0] for z in z_filt]
+    )
+    plot_speed(
+        [z[1,0] for z in z_noise],
+        [z[3,0] for z in z_noise],
+        [z[1,0] for z in z_noise],
+        [z[3,0] for z in z_noise],
+        [z[1,0] for z in z_filt],
+        [z[3,0] for z in z_filt]
+    )
+    plot_prob(
+        [p[0,0] for p in prob],
+        [p[1,0] for p in prob],
+        [p[2,0] for p in prob],
+    )
+    pred_x = []
+    pred_y = []
+    for step_z in pred_z:
+        curr_x = [z[0,0] for z in step_z]
+        pred_x.append(curr_x)
+        curr_y = [z[2,0] for z in step_z]
+        pred_y.append(curr_y)
+    plot_prediction(
+        [z[0,0] for z in z_noise],
+        [z[2,0] for z in z_noise],
+        pred_x,
+        pred_y
+    )
+
+    plot_show()
+
+test_imm_veh_pred()
