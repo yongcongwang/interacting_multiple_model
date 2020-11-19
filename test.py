@@ -67,7 +67,7 @@ def imm_cvat():
         [0.01, 0.98, 0.01],
         [0.01, 0.01, 0.98]
     ])
-    U_prob = np.array([0.33, 0.33, 0.33]).reshape((-1, 1))
+    U_prob = np.array([0.8, 0.1, 0.1]).reshape((-1, 1))
 
     models = [kf_cv(), kf_ca(), kf_ct()]
     r = np.array([

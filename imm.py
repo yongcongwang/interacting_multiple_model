@@ -33,9 +33,10 @@ class Imm:
         P_mix = [np.zeros(model.P.shape) for model in self.models]
         for j in range(self.mode_cnt):
             for i in range(self.mode_cnt):
-                P_mix[j] += mu[i, j] * (self.models[j].P + np.dot(
-                    self.models[j].X - X_mix[j],
-                    (self.models[j].X - X_mix[j]).T))
+                P = self.models[i].P + np.dot((self.models[i].X - X_mix[i]),
+                                              (self.models[i].X - X_mix[i]).T)
+                P_mix[j] += mu[i, j] * np.dot(np.dot(self.model_trans[j][i], P),
+                                              self.model_trans[j][i].T)
         ## step2: filt
         for j in range(self.mode_cnt):
             self.models[j].X = X_mix[j]
